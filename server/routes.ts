@@ -222,7 +222,11 @@ export async function registerRoutes(
   // Candidate routes
   app.get("/api/candidates", async (req, res) => {
     try {
-      const candidates = await storage.getCandidates();
+      let candidates = await storage.getCandidates();
+      const limit = parseInt(req.query.limit as string);
+      if (!isNaN(limit) && limit > 0) {
+        candidates = candidates.slice(0, limit);
+      }
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch candidates" });

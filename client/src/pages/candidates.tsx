@@ -21,9 +21,21 @@ export default function CandidatesPage() {
   const [wardFilter, setWardFilter] = useState("all");
   const [partyFilter, setPartyFilter] = useState("all");
 
-  const { data: candidates = [], isLoading, error } = useQuery<Candidate[]>({
+  const ITEMS_PER_PAGE = 18;
+
+  // 1. Fetch first page of candidates instantly
+  const { data: initialCandidates = [], isLoading: isInitialLoading, error: initialError } = useQuery<Candidate[]>({
+    queryKey: [`/api/candidates?limit=${ITEMS_PER_PAGE}`],
+  });
+
+  // 2. Fetch all candidates in the background for filtering/pagination
+  const { data: allCandidates = [], isLoading: isAllLoading, error: allError } = useQuery<Candidate[]>({
     queryKey: ["/api/candidates"],
   });
+
+  const candidates = allCandidates.length > 0 ? allCandidates : initialCandidates;
+  const isLoading = isInitialLoading && allCandidates.length === 0;
+  const error = initialError || (allCandidates.length === 0 ? allError : null);
 
   const sortedCandidates = [...candidates].sort((a, b) => {
     return (parseInt(a.id) || 0) - (parseInt(b.id) || 0);
@@ -66,7 +78,6 @@ export default function CandidatesPage() {
   }
 
   /* Pagination Logic */
-  const ITEMS_PER_PAGE = 18;
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset page when filters change
